@@ -1,0 +1,19 @@
+{
+    "name": "danilocgsilva/entityclone",
+    "type": "library",
+    "require-dev": {
+        "phpunit/phpunit": "^5.2"
+    },
+    "autoload": {
+        "psr-4": {
+            "Danilocgsilva\\EntityClone\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Danilo Silva",
+            "email": "contact@danilocgsilva.me"
+        }
+    ],
+    "require": {}
+}
