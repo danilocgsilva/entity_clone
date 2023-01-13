@@ -48,4 +48,14 @@ class EntityClone {
         $this->destinyPassword = $destinyPassword;
         return $this;
     }
+
+    public function getAllConnectionsData(): array
+    {
+        return [
+            'source-dns' => $this->sourceDns,
+            'source-user' => $this->sourceUser,
+            'destiny-dns' => $this->destinyDns,
+            'destiny-user' => $this->destinyUser
+        ];
+    }
 }

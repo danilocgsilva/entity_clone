@@ -1,9 +1,6 @@
 {
     "name": "danilocgsilva/entityclone",
     "type": "library",
-    "require-dev": {
-        "phpunit/phpunit": "^9"
-    },
     "autoload": {
         "psr-4": {
             "Danilocgsilva\\EntityClone\\": "src/"
@@ -11,7 +8,7 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "Tests\\": "tests/"
+            "Tests\\EntityCloneTest\\": "tests/"
         }
     },
     "authors": [
@@ -20,5 +17,10 @@
             "email": "contact@danilocgsilva.me"
         }
     ],
-    "require": {}
+    "require": {
+        "ext-mbstring": "*"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.5"
+    }
 }
