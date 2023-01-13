@@ -18,9 +18,17 @@
         }
     ],
     "require": {
-        "ext-mbstring": "*"
+        "ext-mbstring": "*",
+        "danilocgsilva/pdo_string_builder": "^1.0"
     },
     "require-dev": {
         "phpunit/phpunit": "^9.5"
-    }
+    },
+    "repositories": [
+        {
+            "name": "danilocgsilva/pdo_string_builder",
+            "type": "vcs",
+            "url": "https://github.com/danilocgsilva/pdo_string_builder"
+        }
+    ]
 }

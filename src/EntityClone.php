@@ -58,4 +58,9 @@ class EntityClone {
             'destiny-user' => $this->destinyUser
         ];
     }
+
+    public function clone(string $table, int $id)
+    {
+        
+    }
 }
