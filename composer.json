@@ -2,11 +2,16 @@
     "name": "danilocgsilva/entityclone",
     "type": "library",
     "require-dev": {
-        "phpunit/phpunit": "^5.2"
+        "phpunit/phpunit": "^9"
     },
     "autoload": {
         "psr-4": {
             "Danilocgsilva\\EntityClone\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
         }
     },
     "authors": [
