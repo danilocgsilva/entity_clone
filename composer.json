@@ -1,0 +1,15 @@
+{
+    "name": "danilocgsilva/entity_clone",
+    "autoload": {
+        "psr-4": {
+            "Danilocgsilva\\EntityClone\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Danilo Silva",
+            "email": "contact@danilocgsilva.me"
+        }
+    ],
+    "require": {}
+}
