@@ -19,7 +19,7 @@ class EntityClone
         private PDO $destinyPdo
     ) {}
 
-    public function entity_clone(
+    public function entityClone(
         string $table,
         string $idValue
     ): void
@@ -29,7 +29,7 @@ class EntityClone
         $this->sourceFields = $this->getFields($this->sourcePdo);
         $this->destinyFields = $this->getFields($this->sourcePdo);
         
-        $inserQuery = $this->createInsertQuery();
+        $insertQuery = $this->createInsertQuery();
     }
 
     private function getFields(PDO $pdo): array
@@ -71,27 +71,32 @@ class EntityClone
             $this->table,
             $this->getFirstColumnFromSource()
         );
-        return "";
+
+        $preResults = $this->sourcePdo->prepare($getSourceDataQuery);
+        $preResults->execute();
+        $rowData = $preResults->fetch(PDO::FETCH_ASSOC);
+
+        return '"a", "b", "c"';
     }
 
     private function getFirstColumnFromSource(): string
     {
-
+        return $this->sourceFields[0];
     }
 
-    // private function getCommaSeparatedDestinyFields(): string
-    // {
-    //     $fieldsWithoutFirstColumn = clone $this->destinyFields;
-    //     array_shift($fieldsWithoutFirstColumn);
-    //     return implode(",", $fieldsWithoutFirstColumn);
-    // }
+    private function getCommaSeparatedDestinyFields(): string
+    {
+        $fieldsWithoutFirstColumn = clone $this->destinyFields;
+        array_shift($fieldsWithoutFirstColumn);
+        return implode(",", $fieldsWithoutFirstColumn);
+    }
 
-    // private function getCommaSeparatedSourceFields(): string
-    // {
-    //     $fieldsWithoutFirstColumn = clone $this->sourceFields;
-    //     array_shift($fieldsWithoutFirstColumn);
-    //     return implode(",", $fieldsWithoutFirstColumn);
-    // }
+    private function getCommaSeparatedSourceFields(): string
+    {
+        $fieldsWithoutFirstColumn = clone $this->sourceFields;
+        array_shift($fieldsWithoutFirstColumn);
+        return implode(",", $fieldsWithoutFirstColumn);
+    }
 
     private function getCommaSeparatedFields(string $target): string
     {
