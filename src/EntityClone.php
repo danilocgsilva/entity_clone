@@ -22,7 +22,7 @@ class EntityClone
     public function entityClone(
         string $table,
         string $idValue
-    ): void
+    ): bool
     {
         $this->table = $table;
         $this->idValue = $idValue;
@@ -30,6 +30,10 @@ class EntityClone
         $this->destinyFields = $this->getFields($this->sourcePdo);
         
         $insertQuery = $this->createInsertQuery();
+
+        $resResults = $this->destinyPdo->prepare($insertQuery);
+        $resultsInsertion = $resResults->execute();
+        return $resultsInsertion;
     }
 
     private function getFields(PDO $pdo): array
@@ -38,12 +42,14 @@ class EntityClone
 
         $baseQuery = "SELECT COLUMN_NAME
             FROM INFORMATION_SCHEMA.COLUMNS
-            WHERE TABLE_SCHEMA = %s AND TABLE_NAME = %s
+            WHERE TABLE_SCHEMA = :tableschema AND TABLE_NAME = :tablename
             ORDER BY ordinal_position;";
 
-        $consultFieldsQuery = sprintf($baseQuery, $databaseName, $this->table);
-        $preResults = $pdo->prepare($consultFieldsQuery);
-        $preResults->execute();
+        $preResults = $pdo->prepare($baseQuery);
+        $preResults->execute([
+            ':tableschema' => $databaseName,
+            ':tablename' => $this->table,
+        ]);
         $fields = [];
         while ($row = $preResults->fetch(PDO::FETCH_ASSOC)) {
             $fields[] = $row['COLUMN_NAME'];
@@ -54,62 +60,53 @@ class EntityClone
     private function createInsertQuery(): string
     {
         $destinyFieldsCommaSeparated = $this->getCommaSeparatedDestinyFields();
+        $sourceValuesAsString = $this->getSourceValuesAsString();
 
         return sprintf(
             "INSERT INTO %s (%s) VALUES (%s);", 
             $this->table, 
             $destinyFieldsCommaSeparated,
-            $this->getSourceValuesAsString()
+            $sourceValuesAsString
         );
     }
 
     private function getSourceValuesAsString(): string
     {
         $getSourceDataQuery = sprintf(
-            "SELECT %s FROM %s WHERE %s", 
+            "SELECT %s FROM %s WHERE %s = :id", 
             $this->getCommaSeparatedSourceFields(),
             $this->table,
-            $this->getFirstColumnFromSource()
+            $this->sourceFields[0]
         );
 
         $preResults = $this->sourcePdo->prepare($getSourceDataQuery);
-        $preResults->execute();
-        $rowData = $preResults->fetch(PDO::FETCH_ASSOC);
+        $preResults->execute([
+            ':id' => $this->idValue
+        ]);
+        $rowData = $preResults->fetch(PDO::FETCH_NUM);
 
-        return '"a", "b", "c"';
-    }
+        foreach ($rowData as $key => $value) {
+            if ($value === null) {
+                $rowData[$key] = "NULL";
+            } else
+            if (!is_numeric($value)) {
+                $rowData[$key] = "'" . $rowData[$key] . "'";
+            }
+        }
 
-    private function getFirstColumnFromSource(): string
-    {
-        return $this->sourceFields[0];
+        return implode(",", $rowData);
     }
 
     private function getCommaSeparatedDestinyFields(): string
     {
-        $fieldsWithoutFirstColumn = clone $this->destinyFields;
+        $fieldsWithoutFirstColumn = array_map(fn ($element) => $element, $this->destinyFields);
         array_shift($fieldsWithoutFirstColumn);
         return implode(",", $fieldsWithoutFirstColumn);
     }
 
     private function getCommaSeparatedSourceFields(): string
     {
-        $fieldsWithoutFirstColumn = clone $this->sourceFields;
-        array_shift($fieldsWithoutFirstColumn);
-        return implode(",", $fieldsWithoutFirstColumn);
-    }
-
-    private function getCommaSeparatedFields(string $target): string
-    {
-        $pdoToClone = null;
-        // switch ($target) {
-        //     case 'source':
-        //         $pdoToClone = $this->sourceFields;
-        //     case 'destiny';
-        //         $pdoToClone = $this->destinyFields;
-        //     default:
-        //         throw new Exception("Wrong target given to method.");
-        // }
-        $fieldsWithoutFirstColumn = clone $pdoToClone;
+        $fieldsWithoutFirstColumn = array_map(fn ($element) => $element, $this->sourceFields);
         array_shift($fieldsWithoutFirstColumn);
         return implode(",", $fieldsWithoutFirstColumn);
     }
