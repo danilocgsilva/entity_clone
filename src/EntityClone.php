@@ -13,18 +13,33 @@ class EntityClone
     private string $idValue;
     private array $sourceFields;
     private array $destinyFields;
+    private bool $cloneId = false;
     
     public function __construct(
         private PDO $sourcePdo,
         private PDO $destinyPdo
     ) {}
 
-    public function entityClone(
-        string $table,
-        string $idValue
-    ): bool
+    public function setOnCloneId(): self
+    {
+        $this->cloneId = true;
+        return $this;
+    }
+
+    public function setOffCloneId(): self
+    {
+        $this->cloneId = false;
+        return $this;
+    }
+
+    public function setTable(string $table): self
     {
         $this->table = $table;
+        return $this;
+    }
+
+    public function entityClone(string $idValue): bool
+    {
         $this->idValue = $idValue;
         $this->sourceFields = $this->getFields($this->sourcePdo);
         $this->destinyFields = $this->getFields($this->sourcePdo);
@@ -99,6 +114,9 @@ class EntityClone
 
     private function getCommaSeparatedDestinyFields(): string
     {
+        if ($this->cloneId) {
+            return implode(",", $this->destinyFields);
+        }
         $fieldsWithoutFirstColumn = array_map(fn ($element) => $element, $this->destinyFields);
         array_shift($fieldsWithoutFirstColumn);
         return implode(",", $fieldsWithoutFirstColumn);
@@ -106,6 +124,9 @@ class EntityClone
 
     private function getCommaSeparatedSourceFields(): string
     {
+        if ($this->cloneId) {
+            return implode(",", $this->sourceFields);
+        }
         $fieldsWithoutFirstColumn = array_map(fn ($element) => $element, $this->sourceFields);
         array_shift($fieldsWithoutFirstColumn);
         return implode(",", $fieldsWithoutFirstColumn);
