@@ -14,12 +14,14 @@ class EntityClone
     private array $destinyFields;
     private bool $cloneId = false;
     private string $commonFieldsCommaSeparated;
+    private ReductionFields $reductionFields;
     
     public function __construct(
         private PDO $sourcePdo,
-        private PDO $destinyPdo,
-        private ReductionFields $reductionFields
-    ) {}
+        private PDO $destinyPdo
+    ) {
+        $this->reductionFields = new ReductionFields();
+    }
 
     public function setOnCloneId(): self
     {
