@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Danilocgsilva\EntityClone;
 
 use PDO;
-use Exception;
 
 class EntityClone
 {
@@ -15,13 +14,11 @@ class EntityClone
     private array $destinyFields;
     private bool $cloneId = false;
     private string $commonFieldsCommaSeparated;
-    private array $reducedFields = [
-        'destiny' => []
-    ];
     
     public function __construct(
         private PDO $sourcePdo,
-        private PDO $destinyPdo
+        private PDO $destinyPdo,
+        private ReductionFields $reductionFields
     ) {}
 
     public function setOnCloneId(): self
@@ -54,7 +51,7 @@ class EntityClone
         $resultsInsertion = $resResults->execute();
         return [
             'success' => $resultsInsertion,
-            'reducedFields' => $this->reducedFields
+            'reducedFields' => $this->reductionFields
         ];
     }
 
@@ -127,7 +124,7 @@ class EntityClone
             if (in_array($destinyField, $this->sourceFields)) {
                 $reducedDestinyFields[] = $destinyField;
             } else {
-                $this->reducedFields['destiny'][] = $destinyField;
+                $this->reductionFields->addReducedDestiny($destinyField);
             }
         }
 
@@ -136,7 +133,7 @@ class EntityClone
             if (in_array($sourceField, $this->destinyFields)) {
                 $reducedSourceFields[] = $sourceField;
             } else {
-                $this->reducedFields['source'][] = $sourceField;
+                $this->reductionFields->addReducedSource($sourceField);
             }
         }
 
