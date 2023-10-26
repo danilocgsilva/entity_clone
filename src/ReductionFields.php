@@ -23,7 +23,7 @@ class ReductionFields
 
     public function hasReducedFields(): bool
     {
-        return empty($this->reducedDestiny) && empty($this->reducedSource);
+        return !empty($this->reducedDestiny) && !empty($this->reducedSource);
     }
 
     public function getReducedDestiny(): array
