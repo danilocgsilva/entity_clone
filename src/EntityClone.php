@@ -14,6 +14,10 @@ class EntityClone
     private array $sourceFields;
     private array $destinyFields;
     private bool $cloneId = false;
+    private string $commonFieldsCommaSeparated;
+    private array $reducedFields = [
+        'destiny' => []
+    ];
     
     public function __construct(
         private PDO $sourcePdo,
@@ -38,17 +42,20 @@ class EntityClone
         return $this;
     }
 
-    public function entityClone(string $idValue): bool
+    public function entityClone(string $idValue): array
     {
         $this->idValue = $idValue;
         $this->sourceFields = $this->getFields($this->sourcePdo);
-        $this->destinyFields = $this->getFields($this->sourcePdo);
+        $this->destinyFields = $this->getFields($this->destinyPdo);
         
         $insertQuery = $this->createInsertQuery();
 
         $resResults = $this->destinyPdo->prepare($insertQuery);
         $resultsInsertion = $resResults->execute();
-        return $resultsInsertion;
+        return [
+            'success' => $resultsInsertion,
+            'reducedFields' => $this->reducedFields
+        ];
     }
 
     private function getFields(PDO $pdo): array
@@ -74,13 +81,14 @@ class EntityClone
 
     private function createInsertQuery(): string
     {
-        $destinyFieldsCommaSeparated = $this->getCommaSeparatedDestinyFields();
+        $commonFields = $this->reduceFields();
+        $this->commonFieldsCommaSeparated = implode(", ", $commonFields);
         $sourceValuesAsString = $this->getSourceValuesAsString();
 
         return sprintf(
             "INSERT INTO %s (%s) VALUES (%s);", 
             $this->table, 
-            $destinyFieldsCommaSeparated,
+            $this->commonFieldsCommaSeparated, 
             $sourceValuesAsString
         );
     }
@@ -89,7 +97,7 @@ class EntityClone
     {
         $getSourceDataQuery = sprintf(
             "SELECT %s FROM %s WHERE %s = :id", 
-            $this->getCommaSeparatedSourceFields(),
+            $this->commonFieldsCommaSeparated,
             $this->table,
             $this->sourceFields[0]
         );
@@ -112,23 +120,34 @@ class EntityClone
         return implode(",", $rowData);
     }
 
-    private function getCommaSeparatedDestinyFields(): string
+    private function reduceFields(): array
     {
-        if ($this->cloneId) {
-            return implode(",", $this->destinyFields);
+        $reducedDestinyFields = [];
+        foreach ($this->destinyFields as $destinyField) {
+            if (in_array($destinyField, $this->sourceFields)) {
+                $reducedDestinyFields[] = $destinyField;
+            } else {
+                $this->reducedFields['destiny'][] = $destinyField;
+            }
         }
-        $fieldsWithoutFirstColumn = array_map(fn ($element) => $element, $this->destinyFields);
-        array_shift($fieldsWithoutFirstColumn);
-        return implode(",", $fieldsWithoutFirstColumn);
-    }
 
-    private function getCommaSeparatedSourceFields(): string
-    {
-        if ($this->cloneId) {
-            return implode(",", $this->sourceFields);
+        $reducedSourceFields = [];
+        foreach ($this->sourceFields as $sourceField) {
+            if (in_array($sourceField, $this->destinyFields)) {
+                $reducedSourceFields[] = $sourceField;
+            } else {
+                $this->reducedFields['source'][] = $sourceField;
+            }
         }
-        $fieldsWithoutFirstColumn = array_map(fn ($element) => $element, $this->sourceFields);
-        array_shift($fieldsWithoutFirstColumn);
-        return implode(",", $fieldsWithoutFirstColumn);
+
+        $reducedFields = array_intersect($reducedDestinyFields, $reducedSourceFields);
+
+        if ($this->cloneId) {
+            return $reducedFields;
+        }
+
+        array_shift($reducedFields);
+
+        return $reducedFields;
     }
 }
