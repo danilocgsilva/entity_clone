@@ -11,5 +11,13 @@
             "email": "contact@danilocgsilva.me"
         }
     ],
-    "require": {}
+    "require": {
+        "danilocgsilva/entities_discover": "^1.0"
+    },
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "git@github.com:danilocgsilva/entities_discover.git"
+        }
+    ]
 }

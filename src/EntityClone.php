@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Danilocgsilva\EntityClone;
 
 use PDO;
+use Danilocgsilva\EntitiesDiscover\Entity;
+use Danilocgsilva\EntitiesDiscover\ErrorLogInterface;
 
 class EntityClone
 {
@@ -55,6 +57,35 @@ class EntityClone
             'success' => $resultsInsertion,
             'reducedFields' => $this->reductionFields
         ];
+    }
+
+    public function entityCloneDeepByFirstField(string $idValue): array
+    {
+        $entity = new Entity(
+            new class() implements ErrorLogInterface { 
+                function message($message) {} 
+            }
+        );
+        $entity->setPdo($this->sourcePdo);
+
+        $occurrencesFromOtherTables = 
+            $entity->discoverEntitiesOccurrencesByIdentity($this->table, $idValue);
+
+        // $this->idValue = $idValue;
+        // $this->sourceFields = $this->getFields($this->sourcePdo);
+        // $this->destinyFields = $this->getFields($this->destinyPdo);
+        
+        // $insertQuery = $this->createInsertQuery();
+
+        // $resResults = $this->destinyPdo->prepare($insertQuery);
+        // $resultsInsertion = $resResults->execute();
+
+
+        
+        // return [
+        //     'success' => $resultsInsertion,
+        //     'reducedFields' => $this->reductionFields
+        // ];
     }
 
     private function getFields(PDO $pdo): array
