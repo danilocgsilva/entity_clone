@@ -7,6 +7,7 @@ namespace Danilocgsilva\EntityClone;
 use PDO;
 use Danilocgsilva\EntitiesDiscover\Entity;
 use Danilocgsilva\EntitiesDiscover\ErrorLogInterface;
+use Exception;
 
 class EntityClone
 {
@@ -17,6 +18,7 @@ class EntityClone
     private bool $cloneId = false;
     private string $commonFieldsCommaSeparated;
     private ReductionFields $reductionFields;
+    private $deepByFieldName = false;
     
     public function __construct(
         private PDO $sourcePdo,
@@ -37,6 +39,12 @@ class EntityClone
         return $this;
     }
 
+    public function setDeepByFieldName(): self
+    {
+        $this->deepByFieldName = true;
+        return $this;
+    }
+
     public function setTable(string $table): self
     {
         $this->table = $table;
@@ -45,47 +53,43 @@ class EntityClone
 
     public function entityClone(string $idValue): array
     {
-        $this->idValue = $idValue;
-        $this->sourceFields = $this->getFields($this->sourcePdo);
-        $this->destinyFields = $this->getFields($this->destinyPdo);
-        
-        $insertQuery = $this->createInsertQuery();
+        if ($this->deepByFieldName) {
+            $entity = new Entity(
+                new class() implements ErrorLogInterface { 
+                    function message($message) {} 
+                }
+            );
+            $entity->setPdo($this->sourcePdo);
+            $occurrencesFromOtherTables = 
+                $entity->discoverEntitiesOccurrencesByIdentity($this->table, $idValue);
+            $occurrencesNonZeroCounts = array_filter(
+                $occurrencesFromOtherTables, 
+                fn ($occurrence) => $occurrence > 0
+            );
+            foreach ($occurrencesNonZeroCounts as $table) {
+                $entityCloneTableLoop = new self($this->sourcePdo, $this->destinyPdo);
+                $entityCloneTableLoop->setTable($table);
+                $entityCloneTableLoop->setOnCloneId();
+                try {
+                    $entityCloneTableLoop
+                } catch (Exception $e) {
 
-        $resResults = $this->destinyPdo->prepare($insertQuery);
-        $resultsInsertion = $resResults->execute();
-        return [
-            'success' => $resultsInsertion,
-            'reducedFields' => $this->reductionFields
-        ];
-    }
-
-    public function entityCloneDeepByFirstField(string $idValue): array
-    {
-        $entity = new Entity(
-            new class() implements ErrorLogInterface { 
-                function message($message) {} 
+                }
             }
-        );
-        $entity->setPdo($this->sourcePdo);
-
-        $occurrencesFromOtherTables = 
-            $entity->discoverEntitiesOccurrencesByIdentity($this->table, $idValue);
-
-        // $this->idValue = $idValue;
-        // $this->sourceFields = $this->getFields($this->sourcePdo);
-        // $this->destinyFields = $this->getFields($this->destinyPdo);
-        
-        // $insertQuery = $this->createInsertQuery();
-
-        // $resResults = $this->destinyPdo->prepare($insertQuery);
-        // $resultsInsertion = $resResults->execute();
-
-
-        
-        // return [
-        //     'success' => $resultsInsertion,
-        //     'reducedFields' => $this->reductionFields
-        // ];
+        } else {
+            $this->idValue = $idValue;
+            $this->sourceFields = $this->getFields($this->sourcePdo);
+            $this->destinyFields = $this->getFields($this->destinyPdo);
+            
+            $insertQuery = $this->createInsertQuery();
+    
+            $resResults = $this->destinyPdo->prepare($insertQuery);
+            $resultsInsertion = $resResults->execute();
+            return [
+                'success' => $resultsInsertion,
+                'reducedFields' => $this->reductionFields
+            ];
+        }
     }
 
     private function getFields(PDO $pdo): array
@@ -179,5 +183,14 @@ class EntityClone
         array_shift($reducedFields);
 
         return $reducedFields;
+    }
+
+    private function getFirstFieldFromTable(string $table): string
+    {
+        $query = sprintf("DESCRIBE %s;", $table);
+        $preResult = $this->sourcePdo->prepare($query);
+        $preResult->execute();
+        $firstFieldRow = $preResult->fetch(PDO::FETCH_ASSOC);
+        return $firstFieldRow["Field"];
     }
 }
