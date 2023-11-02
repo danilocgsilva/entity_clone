@@ -18,7 +18,7 @@ class EntityClone
     private bool $cloneId = false;
     private string $commonFieldsCommaSeparated;
     private ReductionFields $reductionFields;
-    private ?string $filterField;
+    private ?string $filterField = null;
     
     public function __construct(
         private PDO $sourcePdo,
@@ -36,6 +36,7 @@ class EntityClone
     public function setFilterField(string $filterField): self
     {
         $this->filterField = $filterField;
+        return $this;
     }
 
     public function setOffCloneId(): self
@@ -66,16 +67,6 @@ class EntityClone
         ];
     }
 
-    // public function entityCloneNonIdField(string $fieldValue, string $tableName)
-    // {
-    //     $this->idValue = $fieldValue;
-
-    //     $this->sourceFields = $this->getFields($this->sourcePdo);
-    //     $this->destinyFields = $this->getFields($this->destinyPdo);
-
-    //     $insertQuery = $this->createInsertQuery();
-    // }
-
     public function entityCloneDeepByFieldName(string $idValue): array
     {
         $this->entityClone($idValue);
@@ -93,17 +84,24 @@ class EntityClone
             $occurrencesFromOtherTables, 
             fn ($occurrence) => $occurrence > 0
         );
-        foreach ($occurrencesNonZeroCounts as $table) {
+        $results = [
+            'success' => [],
+            'fails' => []
+        ];
+        foreach ($occurrencesNonZeroCounts as $table => $count) {
             $entityCloneTableLoop = new self($this->sourcePdo, $this->destinyPdo);
             $entityCloneTableLoop->setTable($table);
             $entityCloneTableLoop->setOnCloneId();
             $entityCloneTableLoop->setFilterField($this->sourceFields[0]);
+            $results['success'][] = $table;
+
             try {
                 $entityCloneTableLoop->entityClone($this->idValue);
             } catch (Exception $e) {
-
+                $results['fails'][] = $table;
             }
         }
+        return $results;
     }
 
     private function getFields(PDO $pdo): array
