@@ -18,7 +18,7 @@ class EntityClone
     private bool $cloneId = false;
     private string $commonFieldsCommaSeparated;
     private ReductionFields $reductionFields;
-    private $deepByFieldName = false;
+    private ?string $filterField;
     
     public function __construct(
         private PDO $sourcePdo,
@@ -33,15 +33,14 @@ class EntityClone
         return $this;
     }
 
+    public function setFilterField(string $filterField): self
+    {
+        $this->filterField = $filterField;
+    }
+
     public function setOffCloneId(): self
     {
         $this->cloneId = false;
-        return $this;
-    }
-
-    public function setDeepByFieldName(): self
-    {
-        $this->deepByFieldName = true;
         return $this;
     }
 
@@ -53,42 +52,57 @@ class EntityClone
 
     public function entityClone(string $idValue): array
     {
-        if ($this->deepByFieldName) {
-            $entity = new Entity(
-                new class() implements ErrorLogInterface { 
-                    function message($message) {} 
-                }
-            );
-            $entity->setPdo($this->sourcePdo);
-            $occurrencesFromOtherTables = 
-                $entity->discoverEntitiesOccurrencesByIdentity($this->table, $idValue);
-            $occurrencesNonZeroCounts = array_filter(
-                $occurrencesFromOtherTables, 
-                fn ($occurrence) => $occurrence > 0
-            );
-            foreach ($occurrencesNonZeroCounts as $table) {
-                $entityCloneTableLoop = new self($this->sourcePdo, $this->destinyPdo);
-                $entityCloneTableLoop->setTable($table);
-                $entityCloneTableLoop->setOnCloneId();
-                try {
-                    $entityCloneTableLoop
-                } catch (Exception $e) {
-
-                }
-            }
-        } else {
-            $this->idValue = $idValue;
-            $this->sourceFields = $this->getFields($this->sourcePdo);
-            $this->destinyFields = $this->getFields($this->destinyPdo);
-            
-            $insertQuery = $this->createInsertQuery();
+        $this->idValue = $idValue;
+        $this->sourceFields = $this->getFields($this->sourcePdo);
+        $this->destinyFields = $this->getFields($this->destinyPdo);
+        
+        $insertQuery = $this->createInsertQuery();
     
-            $resResults = $this->destinyPdo->prepare($insertQuery);
-            $resultsInsertion = $resResults->execute();
-            return [
-                'success' => $resultsInsertion,
-                'reducedFields' => $this->reductionFields
-            ];
+        $resResults = $this->destinyPdo->prepare($insertQuery);
+        $resultsInsertion = $resResults->execute();
+        return [
+            'success' => $resultsInsertion,
+            'reducedFields' => $this->reductionFields
+        ];
+    }
+
+    // public function entityCloneNonIdField(string $fieldValue, string $tableName)
+    // {
+    //     $this->idValue = $fieldValue;
+
+    //     $this->sourceFields = $this->getFields($this->sourcePdo);
+    //     $this->destinyFields = $this->getFields($this->destinyPdo);
+
+    //     $insertQuery = $this->createInsertQuery();
+    // }
+
+    public function entityCloneDeepByFieldName(string $idValue): array
+    {
+        $this->entityClone($idValue);
+
+        $entity = new Entity(
+            new class() implements ErrorLogInterface { 
+                function message($message) {} 
+            }
+        );
+
+        $entity->setPdo($this->sourcePdo);
+        $occurrencesFromOtherTables = 
+            $entity->discoverEntitiesOccurrencesByIdentity($this->table, $idValue);
+        $occurrencesNonZeroCounts = array_filter(
+            $occurrencesFromOtherTables, 
+            fn ($occurrence) => $occurrence > 0
+        );
+        foreach ($occurrencesNonZeroCounts as $table) {
+            $entityCloneTableLoop = new self($this->sourcePdo, $this->destinyPdo);
+            $entityCloneTableLoop->setTable($table);
+            $entityCloneTableLoop->setOnCloneId();
+            $entityCloneTableLoop->setFilterField($this->sourceFields[0]);
+            try {
+                $entityCloneTableLoop->entityClone($this->idValue);
+            } catch (Exception $e) {
+
+            }
         }
     }
 
@@ -117,41 +131,39 @@ class EntityClone
     {
         $commonFields = $this->reduceFields();
         $this->commonFieldsCommaSeparated = implode(", ", $commonFields);
-        $sourceValuesAsString = $this->getSourceValuesAsString();
+        $sourceValuesAsString = $this->getSourceValuesAsString($this->idValue);
 
         return sprintf(
-            "INSERT INTO %s (%s) VALUES (%s);", 
+            "INSERT INTO %s (%s) VALUES %s;", 
             $this->table, 
             $this->commonFieldsCommaSeparated, 
             $sourceValuesAsString
         );
     }
 
-    private function getSourceValuesAsString(): string
+    private function getSourceValuesAsString(string $filterValue): string
     {
+        $fieldValueFilter = $this->filterField ?: $this->sourceFields[0];
+        
         $getSourceDataQuery = sprintf(
-            "SELECT %s FROM %s WHERE %s = :id", 
+            "SELECT %s FROM %s WHERE %s = :filterValue", 
             $this->commonFieldsCommaSeparated,
             $this->table,
-            $this->sourceFields[0]
+            $fieldValueFilter
         );
 
         $preResults = $this->sourcePdo->prepare($getSourceDataQuery);
         $preResults->execute([
-            ':id' => $this->idValue
+            ':filterValue' => $filterValue
         ]);
-        $rowData = $preResults->fetch(PDO::FETCH_NUM);
 
-        foreach ($rowData as $key => $value) {
-            if ($value === null) {
-                $rowData[$key] = "NULL";
-            } else
-            if (!is_numeric($value)) {
-                $rowData[$key] = "'" . $rowData[$key] . "'";
-            }
+        $rowQueryStringData = [];
+        while ($rowData = $preResults->fetch(PDO::FETCH_NUM)) {
+            $rowDataStrings = $this->convertDataResultToSuitableString($rowData);
+            $rowQueryStringData[] = "(" . implode(",", $rowDataStrings) . ")";
         }
 
-        return implode(",", $rowData);
+        return implode(", ", $rowQueryStringData);
     }
 
     private function reduceFields(): array
@@ -192,5 +204,19 @@ class EntityClone
         $preResult->execute();
         $firstFieldRow = $preResult->fetch(PDO::FETCH_ASSOC);
         return $firstFieldRow["Field"];
+    }
+
+    private function convertDataResultToSuitableString($rowData)
+    {
+        foreach ($rowData as $key => $value) {
+            if ($value === null) {
+                $rowData[$key] = "NULL";
+            } else
+            if (!is_numeric($value)) {
+                $rowData[$key] = "'" . $rowData[$key] . "'";
+            }
+        }
+
+        return $rowData;
     }
 }
