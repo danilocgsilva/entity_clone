@@ -67,7 +67,17 @@ class EntityClone
         $insertQuery = $this->createInsertQuery();
     
         $resResults = $this->destinyPdo->prepare($insertQuery);
+
+        if ($this->timeDebug) {
+            $this->timeDebug->message("Time before table insert in destiny. Table: " . $this->table);
+        }
+
         $resultsInsertion = $resResults->execute();
+
+        if ($this->timeDebug) {
+            $this->timeDebug->message("Insert finished. Table: " . $this->table);
+        }
+        
         return [
             'success' => $resultsInsertion,
             'reducedFields' => $this->reductionFields
