@@ -19,12 +19,19 @@ class EntityClone
     private string $commonFieldsCommaSeparated;
     private ReductionFields $reductionFields;
     private ?string $filterField = null;
+    private TimeDebugInterface|null $timeDebug = null;
     
     public function __construct(
         private PDO $sourcePdo,
         private PDO $destinyPdo
     ) {
         $this->reductionFields = new ReductionFields();
+    }
+
+    public function setTimeDebug(TimeDebugInterface $timeDebug): self
+    {
+        $this->timeDebug = $timeDebug;
+        return $this;
     }
 
     public function setOnCloneId(): self
@@ -151,9 +158,18 @@ class EntityClone
         );
 
         $preResults = $this->sourcePdo->prepare($getSourceDataQuery);
+
+        if ($this->timeDebug) {
+            $this->timeDebug->message("Will get source data from " . $this->table . '.');
+        }
+
         $preResults->execute([
             ':filterValue' => $filterValue
         ]);
+
+        if ($this->timeDebug) {
+            $this->timeDebug->message("Data just fetched from " . $this->table . ".");
+        }
 
         $rowQueryStringData = [];
         while ($rowData = $preResults->fetch(PDO::FETCH_NUM)) {
