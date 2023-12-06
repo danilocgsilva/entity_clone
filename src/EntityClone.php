@@ -94,6 +94,10 @@ class EntityClone
             }
         );
 
+        if ($this->timeDebug) {
+            $entity->setTimeDebug($this->timeDebug);
+        }
+
         $entity->setPdo($this->sourcePdo);
         $occurrencesFromOtherTables = 
             $entity->discoverEntitiesOccurrencesByIdentity($this->table, $idValue);
