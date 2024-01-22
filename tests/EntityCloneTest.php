@@ -14,14 +14,18 @@ class EntityCloneTest extends TestCase
     {
         $sourcePdo = $this->createPdo();
         $sourcePdo = $this->createPdo();
-        $db = new Db();
-        $db->migrate($sourcePdo, 'source');
-        $db->migrate($sourcePdo, 'destiny');
+        $db = new Db($sourcePdo);
+        if (!$db->databaseExists('source')) {
+            $db->migrate('source');
+        }
+        if (!$db->databaseExists('destiny')) {
+            $db->migrate('destiny');
+        }
     }
     
     public function testEntityClone()
     {
-        $this->assertTrue(true);
+        $this->assertTrue(false);
     }
 
     private function createPdo()
