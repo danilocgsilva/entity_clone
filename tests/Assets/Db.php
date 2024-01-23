@@ -17,8 +17,30 @@ class Db
 
     public function migrate(string $databaseName): void
     {
-        $sqlExpression = sprintf("CREATE DATABASE %s;", $databaseName);
-        $this->pdo->exec($sqlExpression);
+        $createSampleTable = "CREATE TABLE `drivers` (" .
+        "    `id` INT NOT NULL AUTO_INCREMENT, " .
+        "    `name` VARCHAR(192) NOT NULL, " . 
+        "    `age` TINYINT NOT NULL, " .
+        "    PRIMARY KEY (`id`)" .
+        ") ENGINE=InnoDB CHARSET=utf8mb4 COLLATE=utf8mb4_bin;";
+        $this->pdo->exec($createSampleTable);
+    }
+
+    public function createDatabase(string $databaseName): void
+    {
+        $createDatabase = sprintf("CREATE DATABASE %s;", $databaseName);
+        $this->pdo->exec($createDatabase);
+    }
+
+    public function renewDatabase(string $databaseName): void
+    {
+        $this->dropDatabase($databaseName);
+        $this->createDatabase($databaseName);
+    }
+
+    public function dropDatabase(string $databaseName): void
+    {
+        $this->pdo->exec(sprintf("DROP DATABASE `%s`;", $databaseName));
     }
 
     public function databaseExists(string $databaseName): bool
