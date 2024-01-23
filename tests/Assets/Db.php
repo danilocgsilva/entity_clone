@@ -17,13 +17,14 @@ class Db
 
     public function migrate(string $databaseName): void
     {
-        $createSampleTable = "CREATE TABLE `drivers` (" .
+        $query = "USE {$databaseName};\n";
+        $query .= "CREATE TABLE `drivers` (" .
         "    `id` INT NOT NULL AUTO_INCREMENT, " .
         "    `name` VARCHAR(192) NOT NULL, " . 
         "    `age` TINYINT NOT NULL, " .
         "    PRIMARY KEY (`id`)" .
         ") ENGINE=InnoDB CHARSET=utf8mb4 COLLATE=utf8mb4_bin;";
-        $this->pdo->exec($createSampleTable);
+        $this->pdo->exec($query);
     }
 
     public function createDatabase(string $databaseName): void
@@ -32,10 +33,30 @@ class Db
         $this->pdo->exec($createDatabase);
     }
 
+    public function seed(string $databaseName): void
+    {
+        $query = "USE {$databaseName};\n";
+        $query .= "INSERT INTO `drivers` (id, name, age)" .
+            " VALUES " .
+            "(6, 'Tobias Silva', 33);";
+        $this->pdo->exec($query);
+    }
+
     public function renewDatabase(string $databaseName): void
     {
         $this->dropDatabase($databaseName);
         $this->createDatabase($databaseName);
+        $this->migrate($databaseName);
+    }
+
+    public function countEntries(string $database, string $table): int
+    {
+        $this->pdo->exec("USE {$database};");
+
+        $query = "SELECT COUNT(*) as counting FROM {$table};";
+        $preResults = $this->pdo->prepare($query);
+        $preResults->execute();
+        return $preResults->fetch(PDO::FETCH_ASSOC)['counting'];
     }
 
     public function dropDatabase(string $databaseName): void
