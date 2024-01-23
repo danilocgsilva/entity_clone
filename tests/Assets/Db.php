@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Assets;
 
 use PDO;
+use Tests\Tables\Drivers;
 
 class Db
 {
@@ -18,12 +19,7 @@ class Db
     public function migrate(string $databaseName): void
     {
         $query = "USE {$databaseName};\n";
-        $query .= "CREATE TABLE `drivers` (" .
-        "    `id` INT NOT NULL AUTO_INCREMENT, " .
-        "    `name` VARCHAR(192) NOT NULL, " . 
-        "    `age` TINYINT NOT NULL, " .
-        "    PRIMARY KEY (`id`)" .
-        ") ENGINE=InnoDB CHARSET=utf8mb4 COLLATE=utf8mb4_bin;";
+        $query .= Drivers::CREATE;
         $this->pdo->exec($query);
     }
 
@@ -36,9 +32,7 @@ class Db
     public function seed(string $databaseName): void
     {
         $query = "USE {$databaseName};\n";
-        $query .= "INSERT INTO `drivers` (id, name, age)" .
-            " VALUES " .
-            "(6, 'Tobias Silva', 33);";
+        $query .= Drivers::INSERT;
         $this->pdo->exec($query);
     }
 

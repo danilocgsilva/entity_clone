@@ -8,6 +8,7 @@ use Danilocgsilva\EntityClone\EntityClone;
 use PHPUnit\Framework\TestCase;
 use Tests\Assets\Db;
 use PDO;
+use Tests\Tables\Drivers;
 
 class EntityCloneTest extends TestCase
 {
@@ -27,11 +28,11 @@ class EntityCloneTest extends TestCase
         $this->db->seed('source');
         $this->assertSame(
             1,
-            $this->db->countEntries('source', 'drivers')
+            $this->db->countEntries('source', Drivers::TABLE_NAME)
         );
         $this->assertSame(
             0,
-            $this->db->countEntries('destiny', 'drivers')
+            $this->db->countEntries('destiny', Drivers::TABLE_NAME)
         );
 
         $entityClone = new EntityClone(
@@ -44,11 +45,11 @@ class EntityCloneTest extends TestCase
 
         $this->assertSame(
             1,
-            $this->db->countEntries('source', 'drivers')
+            $this->db->countEntries('source', Drivers::TABLE_NAME)
         );
         $this->assertSame(
             1,
-            $this->db->countEntries('destiny', 'drivers')
+            $this->db->countEntries('destiny', Drivers::TABLE_NAME)
         );
     }
 
