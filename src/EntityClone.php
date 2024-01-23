@@ -129,6 +129,10 @@ class EntityClone
     {
         $databaseName = $pdo->query('SELECT database()')->fetchColumn();
 
+        if ($databaseName === null) {
+            throw new Exception("The PDO object must have a database definition on its statement.");
+        }
+
         $baseQuery = "SELECT COLUMN_NAME
             FROM INFORMATION_SCHEMA.COLUMNS
             WHERE TABLE_SCHEMA = :tableschema AND TABLE_NAME = :tablename

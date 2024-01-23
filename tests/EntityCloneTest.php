@@ -5,25 +5,11 @@ declare(strict_types=1);
 namespace Tests;
 
 use Danilocgsilva\EntityClone\EntityClone;
-use PHPUnit\Framework\TestCase;
-use Tests\Assets\Db;
-use PDO;
 use Tests\Tables\Drivers;
 
-class EntityCloneTest extends TestCase
+class EntityCloneTest extends EntityCloneTestCommons
 {
-    private Db $db;
-
-    public function setUp(): void
-    {
-        $pdo = $this->createPdo();
-        $this->db = new Db($pdo);
-
-        $this->db->renewDatabase('source');
-        $this->db->renewDatabase('destiny');
-    }
-    
-    public function testEntityClone()
+    public function testEntityCloneStarting()
     {
         $this->db->seed('source');
         $this->assertSame(
@@ -34,6 +20,11 @@ class EntityCloneTest extends TestCase
             0,
             $this->db->countEntries('destiny', Drivers::TABLE_NAME)
         );
+    }
+
+    public function testEntityCloneSimple()
+    {
+        $this->db->seed('source');
 
         $entityClone = new EntityClone(
             $this->createPdo('source'),
@@ -50,19 +41,6 @@ class EntityCloneTest extends TestCase
         $this->assertSame(
             1,
             $this->db->countEntries('destiny', Drivers::TABLE_NAME)
-        );
-    }
-
-    private function createPdo(?string $databaseName = null)
-    {
-        $stringPdoCreationg = "mysql:host=databasephpapache;charset=utf8mb4";
-        if ($databaseName) {
-            $stringPdoCreationg .= ";dbname={$databaseName}";
-        }
-        return new PDO(
-            $stringPdoCreationg, 
-            'root', 
-            'phppass'
         );
     }
 }
