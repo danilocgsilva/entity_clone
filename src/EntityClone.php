@@ -84,6 +84,17 @@ class EntityClone
         ];
     }
 
+    /**
+     * Clone the current table setted, and also searches fields along other
+     * tables having the same primary key name from current table. Them,
+     * searches for entries in these other tables that have the same value
+     * setted in $idValue. This helps in the data concistency, so bring data
+     * from other tables related to the current table. NOTE: the logic here
+     * does not make any consideration to Foreign Keys.
+     *
+     * @param string $idValue
+     * @return array
+     */
     public function entityCloneDeepByFieldName(string $idValue): array
     {
         $this->entityClone($idValue);
