@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Tests\Assets;
 
 use PDO;
-use Tests\Tables\Drivers;
+use Tests\Tables\TablesAbstract;
 
 class Db
 {
@@ -16,46 +16,58 @@ class Db
         $this->pdo = $pdo;
     }
 
-    public function migrate(string $databaseName): void
+    public function migrate(string $databaseName, TablesAbstract $table): void
     {
         $query = "USE {$databaseName};\n";
-        $query .= Drivers::CREATE;
+        $query .= $table::createTableQuery();
         $this->pdo->exec($query);
     }
 
     public function createDatabase(string $databaseName): void
     {
-        $createDatabase = sprintf("CREATE DATABASE %s;", $databaseName);
-        $this->pdo->exec($createDatabase);
+        $createDatabaseQuery = sprintf("CREATE DATABASE %s;", $databaseName);
+        $this->pdo->exec($createDatabaseQuery);
     }
 
-    public function seed(string $databaseName): void
+    public function seed(string $databaseName, TablesAbstract $tableClass): void
     {
         $query = "USE {$databaseName};\n";
-        $query .= Drivers::INSERT;
+        $query .= $tableClass::createInsertQuery();
         $this->pdo->exec($query);
     }
 
     public function renewDatabase(string $databaseName): void
     {
-        $this->dropDatabase($databaseName);
+        $this->dropDatabaseIfExists($databaseName);
         $this->createDatabase($databaseName);
-        $this->migrate($databaseName);
     }
 
-    public function countEntries(string $database, string $table): int
+    public function renewTable(string $databaseName, TablesAbstract $table): void
+    {
+        $this->pdo->exec("USE {$databaseName};");
+        $this->dropTable($table);
+        $this->migrate($databaseName, $table);
+    }
+
+    public function dropTable(TablesAbstract $table): void
+    {
+        $query = "DROP TABLE IF EXISTS " . $table->getTableName() . ";";
+        $this->pdo->exec($query);
+    }
+
+    public function countEntries(string $database, TablesAbstract $table): int
     {
         $this->pdo->exec("USE {$database};");
 
-        $query = "SELECT COUNT(*) as counting FROM {$table};";
+        $query = "SELECT COUNT(*) as counting FROM {$table->getTableName()};";
         $preResults = $this->pdo->prepare($query);
         $preResults->execute();
         return $preResults->fetch(PDO::FETCH_ASSOC)['counting'];
     }
 
-    public function dropDatabase(string $databaseName): void
+    public function dropDatabaseIfExists(string $databaseName): void
     {
-        $this->pdo->exec(sprintf("DROP DATABASE `%s`;", $databaseName));
+        $this->pdo->exec(sprintf("DROP DATABASE IF EXISTS `%s`;", $databaseName));
     }
 
     public function databaseExists(string $databaseName): bool

@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Tests\Tables;
 
-class Drivers extends TablesAbstract
+class DriversPayment extends TablesAbstract
 {
-    private const TABLE_NAME = "drivers";
+    private const TABLE_NAME = "payment";
 
-    private const CREATE_TABLE_QUERY_FILE = "tests/Assets/queries/create_drivers_table.sql";
+    private const CREATE_TABLE_QUERY_FILE = "tests/Assets/queries/create_payment_table.sql";
 
-    private const INSERT_DEFAULT_DRIVER_QUERY_FILE = "tests/Assets/queries/insert_drivers.sql";
+    private const INSERT_DEFAULT_DRIVER_PAYMENTS = "tests/Assets/queries/insert_payment.sql";
     
     public function __construct()
     {
@@ -24,7 +24,6 @@ class Drivers extends TablesAbstract
 
     public static function createInsertQuery(): string
     {
-        return self::getQuery(self::INSERT_DEFAULT_DRIVER_QUERY_FILE);
+        return self::getQuery(self::INSERT_DEFAULT_DRIVER_PAYMENTS);
     }
 }
-
