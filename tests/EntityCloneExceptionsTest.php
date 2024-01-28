@@ -13,7 +13,9 @@ class EntityCloneExceptionsTest extends EntityCloneTestCommons
     public function testPdoWithoutDatabaseSource()
     {
         $this->expectException(Exception::class);
-        $this->db->seed('source', (new Drivers()));
+
+        $this->db->setDatabase('source')
+            ->seed((new Drivers()));
 
         $entityClone = new EntityClone(
             $this->createPdo(),
@@ -27,7 +29,9 @@ class EntityCloneExceptionsTest extends EntityCloneTestCommons
     public function testPdoWithoutDatabaseDestiny()
     {
         $this->expectException(Exception::class);
-        $this->db->seed('source', (new Drivers()));
+
+        $this->db->setDatabase('source')
+            ->seed((new Drivers()));
 
         $entityClone = new EntityClone(
             $this->createPdo('source'),
@@ -41,7 +45,9 @@ class EntityCloneExceptionsTest extends EntityCloneTestCommons
     public function testPdoWithoutDatabaseBoth()
     {
         $this->expectException(Exception::class);
-        $this->db->seed('source', (new Drivers()));
+
+        $this->db->setDatabase('source')
+            ->seed((new Drivers()));
 
         $entityClone = new EntityClone(
             $this->createPdo(),

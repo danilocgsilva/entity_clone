@@ -9,6 +9,7 @@ abstract class TablesAbstract
     protected string $tableName;
     
     abstract public static function createTableQuery(): string;
+    
     abstract public static function createInsertQuery(): string;
 
     public function getTableName(): string

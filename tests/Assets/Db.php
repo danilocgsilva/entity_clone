@@ -16,6 +16,13 @@ class Db
         $this->pdo = $pdo;
     }
 
+    public function setDatabase(string $databaseName): self
+    {
+        $query = "USE {$databaseName};\n";
+        $this->pdo->exec($query);
+        return $this;
+    }
+
     public function migrate(string $databaseName, TablesAbstract $table): void
     {
         $query = "USE {$databaseName};\n";
@@ -29,11 +36,11 @@ class Db
         $this->pdo->exec($createDatabaseQuery);
     }
 
-    public function seed(string $databaseName, TablesAbstract $tableClass): void
+    public function seed(TablesAbstract $tableClass): self
     {
-        $query = "USE {$databaseName};\n";
-        $query .= $tableClass::createInsertQuery();
+        $query = $tableClass::createInsertQuery();
         $this->pdo->exec($query);
+        return $this;
     }
 
     public function renewDatabase(string $databaseName): void
@@ -42,11 +49,11 @@ class Db
         $this->createDatabase($databaseName);
     }
 
-    public function renewTable(string $databaseName, TablesAbstract $table): void
+    public function renewTable(string $databaseName, TablesAbstract $table): self
     {
-        $this->pdo->exec("USE {$databaseName};");
         $this->dropTable($table);
         $this->migrate($databaseName, $table);
+        return $this;
     }
 
     public function dropTable(TablesAbstract $table): void
@@ -77,5 +84,10 @@ class Db
         $preResults = $this->pdo->prepare($query);
         $preResults->execute();
         return (bool) $preResults->fetch(PDO::FETCH_ASSOC);
+    }
+
+    public function getPdo(): PDO
+    {
+        return $this->pdo;
     }
 }
