@@ -90,4 +90,9 @@ class Db
     {
         return $this->pdo;
     }
+
+    public function existsRegisterId(int $id, TablesAbstract $table): bool
+    {
+        $searchQuery = "SELECT * FROM %s WHERE ";
+    }
 }

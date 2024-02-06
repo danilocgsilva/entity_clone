@@ -7,10 +7,12 @@ namespace Danilocgsilva\EntityClone;
 use PDO;
 use Danilocgsilva\EntitiesDiscover\Entity;
 use Danilocgsilva\EntitiesDiscover\ErrorLogInterface;
+use Danilocgsilva\EntityClone\Traits\GetFields;
 use Exception;
 
 class EntityClone
 {
+    use GetFields;
     private string $table;
     private string $idValue;
     private array $sourceFields;
@@ -136,30 +138,7 @@ class EntityClone
         return $results;
     }
 
-    private function getFields(PDO $pdo): array
-    {
-        $databaseName = $pdo->query('SELECT database()')->fetchColumn();
 
-        if ($databaseName === null) {
-            throw new Exception("The PDO object must have a database definition on its statement.");
-        }
-
-        $baseQuery = "SELECT COLUMN_NAME
-            FROM INFORMATION_SCHEMA.COLUMNS
-            WHERE TABLE_SCHEMA = :tableschema AND TABLE_NAME = :tablename
-            ORDER BY ordinal_position;";
-
-        $preResults = $pdo->prepare($baseQuery);
-        $preResults->execute([
-            ':tableschema' => $databaseName,
-            ':tablename' => $this->table,
-        ]);
-        $fields = [];
-        while ($row = $preResults->fetch(PDO::FETCH_ASSOC)) {
-            $fields[] = $row['COLUMN_NAME'];
-        }
-        return $fields;
-    }
 
     private function createInsertQuery(): string
     {
@@ -174,6 +153,17 @@ class EntityClone
             $sourceValuesAsString
         );
     }
+
+    private function getFirstFieldFromTable(string $table): string
+    {
+        $query = sprintf("DESCRIBE %s;", $table);
+        $preResult = $this->sourcePdo->prepare($query);
+        $preResult->execute();
+        $firstFieldRow = $preResult->fetch(PDO::FETCH_ASSOC);
+        return $firstFieldRow["Field"];
+    }
+
+
 
     private function getSourceValuesAsString(string $filterValue): string
     {
@@ -207,59 +197,5 @@ class EntityClone
         }
 
         return implode(", ", $rowQueryStringData);
-    }
-
-    private function reduceFields(): array
-    {
-        $reducedDestinyFields = [];
-        foreach ($this->destinyFields as $destinyField) {
-            if (in_array($destinyField, $this->sourceFields)) {
-                $reducedDestinyFields[] = $destinyField;
-            } else {
-                $this->reductionFields->addReducedDestiny($destinyField);
-            }
-        }
-
-        $reducedSourceFields = [];
-        foreach ($this->sourceFields as $sourceField) {
-            if (in_array($sourceField, $this->destinyFields)) {
-                $reducedSourceFields[] = $sourceField;
-            } else {
-                $this->reductionFields->addReducedSource($sourceField);
-            }
-        }
-
-        $reducedFields = array_intersect($reducedDestinyFields, $reducedSourceFields);
-
-        if ($this->cloneId) {
-            return $reducedFields;
-        }
-
-        array_shift($reducedFields);
-
-        return $reducedFields;
-    }
-
-    private function getFirstFieldFromTable(string $table): string
-    {
-        $query = sprintf("DESCRIBE %s;", $table);
-        $preResult = $this->sourcePdo->prepare($query);
-        $preResult->execute();
-        $firstFieldRow = $preResult->fetch(PDO::FETCH_ASSOC);
-        return $firstFieldRow["Field"];
-    }
-
-    private function convertDataResultToSuitableString($rowData)
-    {
-        foreach ($rowData as $key => $value) {
-            if ($value === null) {
-                $rowData[$key] = "NULL";
-            } else
-            if (!is_numeric($value)) {
-                $rowData[$key] = "'" . $rowData[$key] . "'";
-            }
-        }
-
-        return $rowData;
     }
 }

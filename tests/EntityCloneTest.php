@@ -149,5 +149,9 @@ class EntityCloneTest extends EntityCloneTestCommons
             4,
             $this->db->countEntries('destiny', $driverPaymentTable)
         );
+
+        $this->assertTrue($this->db->existsRegisterId(1, $driverPaymentTable));
+        $this->assertTrue($this->db->existsRegisterId(2, $driverPaymentTable));
+        $this->assertTrue($this->db->existsRegisterId(3, $driverPaymentTable));
     }
 }

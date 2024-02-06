@@ -7,6 +7,7 @@ namespace Tests\Tables;
 abstract class TablesAbstract
 {
     protected string $tableName;
+    protected string $tableId;
     
     abstract public static function createTableQuery(): string;
     
@@ -15,6 +16,11 @@ abstract class TablesAbstract
     public function getTableName(): string
     {
         return $this->tableName;
+    }
+
+    public function getTableId(): string
+    {
+        return $this->tableId;
     }
 
     protected static function getQuery(string $queryPath): string
