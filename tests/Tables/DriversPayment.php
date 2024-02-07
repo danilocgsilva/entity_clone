@@ -8,6 +8,8 @@ use PDO;
 
 class DriversPayment extends TablesAbstract
 {
+    private const TABLE_ID = "payment_id";
+
     private const TABLE_NAME = "payment";
 
     private const CREATE_TABLE_QUERY_FILE = "tests/Assets/queries/create_payment_table.sql";
@@ -19,6 +21,7 @@ class DriversPayment extends TablesAbstract
     public function __construct()
     {
         $this->tableName = self::TABLE_NAME;
+        $this->tableId = self::TABLE_ID;
     }
 
     public function seedDefaultPayments(string $database, PDO $pdo): void

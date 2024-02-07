@@ -93,6 +93,17 @@ class Db
 
     public function existsRegisterId(int $id, TablesAbstract $table): bool
     {
-        $searchQuery = "SELECT * FROM %s WHERE ";
+        $searchQuery = "SELECT COUNT(*) as counting FROM %s WHERE %s = %s;";
+        $valuedValues = sprintf(
+            $searchQuery,
+            $table->getTableName(),
+            $table->getTableId(),
+            $id
+        );
+
+        $preResults = $this->pdo->prepare($valuedValues);
+        $preResults->execute();
+        $queryResult = $preResults->fetch(PDO::FETCH_ASSOC)['counting'];
+        return (bool) $queryResult;
     }
 }
