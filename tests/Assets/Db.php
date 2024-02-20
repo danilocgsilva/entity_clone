@@ -18,6 +18,9 @@ class Db
 
     public function setDatabase(string $databaseName): self
     {
+        if (!$this->databaseExists($databaseName)) {
+            $this->createDatabase($databaseName);
+        }
         $query = "USE {$databaseName};\n";
         $this->pdo->exec($query);
         return $this;
