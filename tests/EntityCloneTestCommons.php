@@ -18,7 +18,14 @@ class EntityCloneTestCommons extends TestCase
         $this->db = new Db($pdo);
     }
 
-    protected function createPdo(?string $databaseName = null)
+    /**
+     * The PDO object will use environment variables to be created.
+     * Optionally, allows enter a database name, so the pdo is created with the default database.
+     *
+     * @param string|null $databaseName
+     * @return PDO
+     */
+    protected function createPdo(?string $databaseName = null): PDO
     {
         $baseStringPdoCreation = "mysql:host=%s;charset=utf8mb4;port=%s";
         

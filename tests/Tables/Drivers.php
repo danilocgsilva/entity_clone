@@ -6,9 +6,14 @@ namespace Tests\Tables;
 
 use PDO;
 
+/**
+ * Drivers table: a generic schema to store drivers, someone who drives a car
+ * or a truck for some app.
+ */
 class Drivers extends TablesAbstract
 {
     private const TABLE_ID = "driver_id";
+    
     private const TABLE_NAME = "drivers";
 
     private const CREATE_TABLE_QUERY_FILE = "tests/Assets/queries/create_drivers_table.sql";

@@ -23,6 +23,10 @@ class EntityClone
     private ?string $filterField = null;
     private TimeDebugInterface|null $timeDebug = null;
     
+    /**
+     * @param PDO $sourcePdo
+     * @param PDO $destinyPdo
+     */
     public function __construct(
         private PDO $sourcePdo,
         private PDO $destinyPdo
@@ -101,6 +105,7 @@ class EntityClone
     {
         $this->entityClone($idValue);
 
+        /** @var \Danilocgsilva\EntitiesDiscover\Entity $entity */
         $entity = new Entity(
             new class() implements ErrorLogInterface { 
                 function message($message) {} 
@@ -137,8 +142,6 @@ class EntityClone
         }
         return $results;
     }
-
-
 
     private function createInsertQuery(): string
     {
