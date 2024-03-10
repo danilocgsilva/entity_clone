@@ -8,20 +8,30 @@ use PDO;
 use Danilocgsilva\EntitiesDiscover\Entity;
 use Danilocgsilva\EntitiesDiscover\ErrorLogInterface;
 use Danilocgsilva\EntityClone\Traits\GetFields;
+use Danilocgsilva\EntityClone\QueryBuilder;
 use Exception;
 
 class EntityClone
 {
     use GetFields;
+
     private string $table;
+
     private string $idValue;
+
     private array $sourceFields;
+
     private array $destinyFields;
+
     private bool $cloneId = false;
+
     private string $commonFieldsCommaSeparated;
-    private ReductionFields $reductionFields;
+
     private ?string $filterField = null;
+
     private TimeDebugInterface|null $timeDebug = null;
+
+    private QueryBuilder $queryBuilder;
     
     /**
      * @param PDO $sourcePdo
@@ -31,7 +41,7 @@ class EntityClone
         private PDO $sourcePdo,
         private PDO $destinyPdo
     ) {
-        $this->reductionFields = new ReductionFields();
+        $this->queryBuilder = new QueryBuilder();
     }
 
     public function setTimeDebug(TimeDebugInterface $timeDebug): self
@@ -42,7 +52,7 @@ class EntityClone
 
     public function setOnCloneId(): self
     {
-        $this->cloneId = true;
+        $this->queryBuilder->setOnCloneId();
         return $this;
     }
 
@@ -64,6 +74,12 @@ class EntityClone
         return $this;
     }
 
+    /**
+     * Clone data from $sourcePdo to $sourcePdo based on the if from entity
+     *
+     * @param string $idValue
+     * @return array
+     */
     public function entityClone(string $idValue): array
     {
         $this->idValue = $idValue;
@@ -86,7 +102,7 @@ class EntityClone
         
         return [
             'success' => $resultsInsertion,
-            'reducedFields' => $this->reductionFields
+            'reducedFields' => $this->queryBuilder->getReductionFields()
         ];
     }
 
@@ -145,7 +161,11 @@ class EntityClone
 
     private function createInsertQuery(): string
     {
-        $commonFields = $this->reduceFields();
+        $this->queryBuilder
+            ->setSourceFields($this->sourceFields)
+            ->setDestinyFields($this->destinyFields);
+
+        $commonFields = $this->queryBuilder->reduceFields();
         $this->commonFieldsCommaSeparated = implode(", ", $commonFields);
         $sourceValuesAsString = $this->getSourceValuesAsString($this->idValue);
 

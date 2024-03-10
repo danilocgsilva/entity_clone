@@ -6,6 +6,7 @@ namespace Danilocgsilva\EntityClone;
 
 use Danilocgsilva\EntityClone\Traits\GetFields;
 use PDO;
+use Danilocgsilva\EntityClone\QueryBuilder;
 
 class EntityCloneMultiples
 {
@@ -26,6 +27,8 @@ class EntityCloneMultiples
     private string $commonFieldsCommaSeparated;
 
     private TimeDebugInterface|null $timeDebug = null;
+
+    private QueryBuilder $queryBuilder;
 
     public function __construct(
         private PDO $sourcePdo,
@@ -68,7 +71,11 @@ class EntityCloneMultiples
 
     private function createInsertQueryMultiples(): string
     {
-        $commonFields = $this->reduceFields();
+        $this->queryBuilder = new QueryBuilder();
+        $this->queryBuilder->setDestinyFields($this->destinyFields);
+        $this->queryBuilder->setSourceFields($this->sourceFields);
+        
+        $commonFields = $this->queryBuilder->reduceFields();
         $this->commonFieldsCommaSeparated = implode(", ", $commonFields);
         $sourceValuesAsString = $this->getSourceValuesAsStringMultiple($this->ids);
 

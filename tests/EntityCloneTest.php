@@ -112,7 +112,7 @@ class EntityCloneTest extends EntityCloneTestCommons
         );
     }
 
-    public function testCloneDeepAlongFilledTablesSecondDriver()
+    public function testCloneDeepAlongFilledTablesSecondDriverEntries()
     {
         $driverTable = new Drivers();
         $driverPaymentTable = new DriversPayment();
@@ -149,6 +149,35 @@ class EntityCloneTest extends EntityCloneTestCommons
             4,
             $this->db->countEntries('destiny', $driverPaymentTable)
         );
+    }
+
+    public function testCloneDeepAlongFilledTablesSecondDriverCount()
+    {
+        $driverTable = new Drivers();
+        $driverPaymentTable = new DriversPayment();
+        $pdo = $this->db->getPdo();
+
+        $this->db->setDatabase('source');
+        $this->db->renewTable('source', $driverTable);
+        $this->db->renewTable('source', $driverPaymentTable);
+
+        $this->db->setDatabase('destiny');
+        $this->db->renewTable('destiny', $driverTable);
+        $this->db->renewTable('destiny', $driverPaymentTable);
+
+        $driverTable->seedDefaultDriver('source', $pdo);
+        $driverTable->seedAdditionalDriver('source', $pdo);
+
+        $driverPaymentTable->seedDefaultPayments('source', $pdo);
+        $driverPaymentTable->seedAdditionalDriverPayments('source', $pdo);
+
+        $entityClone = new EntityClone(
+            $this->createPdo('source'),
+            $this->createPdo('destiny')
+        );
+
+        $entityClone->setTable("drivers")
+            ->entityCloneDeepByFieldName("9");
 
         $this->assertTrue($this->db->existsRegisterId(18, $driverPaymentTable));
         $this->assertTrue($this->db->existsRegisterId(19, $driverPaymentTable));

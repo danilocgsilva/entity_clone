@@ -34,42 +34,6 @@ trait GetFields
         return $fields;
     }
 
-    /**
-     * Gets the common fields between source and destiny table.
-     *
-     * @return array
-     */
-    private function reduceFields(): array
-    {
-        $reducedDestinyFields = [];
-        foreach ($this->destinyFields as $destinyField) {
-            if (in_array($destinyField, $this->sourceFields)) {
-                $reducedDestinyFields[] = $destinyField;
-            } else {
-                $this->reductionFields->addReducedDestiny($destinyField);
-            }
-        }
-
-        $reducedSourceFields = [];
-        foreach ($this->sourceFields as $sourceField) {
-            if (in_array($sourceField, $this->destinyFields)) {
-                $reducedSourceFields[] = $sourceField;
-            } else {
-                $this->reductionFields->addReducedSource($sourceField);
-            }
-        }
-
-        $reducedFields = array_intersect($reducedDestinyFields, $reducedSourceFields);
-
-        if ($this->cloneId) {
-            return $reducedFields;
-        }
-
-        array_shift($reducedFields);
-
-        return $reducedFields;
-    }
-
     private function convertDataResultToSuitableString($rowData)
     {
         foreach ($rowData as $key => $value) {
