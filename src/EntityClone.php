@@ -86,7 +86,13 @@ class EntityClone
         $this->sourceFields = $this->getFields($this->sourcePdo);
         $this->destinyFields = $this->getFields($this->destinyPdo);
         
-        $insertQuery = $this->createInsertQuery();
+        $this->queryBuilder->setSourceFields($this->sourceFields);
+        $this->queryBuilder->setDestinyFields($this->destinyFields);
+        $this->queryBuilder->setIdValue($this->idValue);
+        $this->queryBuilder->setTable($this->table);
+        $this->queryBuilder->setSourcePdo($this->sourcePdo);
+
+        $insertQuery = $this->queryBuilder->createInsertQuery();
     
         $resResults = $this->destinyPdo->prepare($insertQuery);
 
@@ -135,6 +141,7 @@ class EntityClone
         $entity->setPdo($this->sourcePdo);
         $occurrencesFromOtherTables = 
             $entity->discoverEntitiesOccurrencesByIdentity($this->table, $idValue);
+
         $occurrencesNonZeroCounts = array_filter(
             $occurrencesFromOtherTables, 
             fn ($occurrence) => $occurrence > 0
@@ -159,24 +166,6 @@ class EntityClone
         return $results;
     }
 
-    private function createInsertQuery(): string
-    {
-        $this->queryBuilder
-            ->setSourceFields($this->sourceFields)
-            ->setDestinyFields($this->destinyFields);
-
-        $commonFields = $this->queryBuilder->reduceFields();
-        $this->commonFieldsCommaSeparated = implode(", ", $commonFields);
-        $sourceValuesAsString = $this->getSourceValuesAsString($this->idValue);
-
-        return sprintf(
-            "INSERT INTO %s (%s) VALUES %s;", 
-            $this->table, 
-            $this->commonFieldsCommaSeparated, 
-            $sourceValuesAsString
-        );
-    }
-
     private function getFirstFieldFromTable(string $table): string
     {
         $query = sprintf("DESCRIBE %s;", $table);
@@ -184,41 +173,5 @@ class EntityClone
         $preResult->execute();
         $firstFieldRow = $preResult->fetch(PDO::FETCH_ASSOC);
         return $firstFieldRow["Field"];
-    }
-
-
-
-    private function getSourceValuesAsString(string $filterValue): string
-    {
-        $fieldValueFilter = $this->filterField ?: $this->sourceFields[0];
-        
-        $getSourceDataQuery = sprintf(
-            "SELECT %s FROM %s WHERE %s = :filterValue", 
-            $this->commonFieldsCommaSeparated,
-            $this->table,
-            $fieldValueFilter
-        );
-
-        $preResults = $this->sourcePdo->prepare($getSourceDataQuery);
-
-        if ($this->timeDebug) {
-            $this->timeDebug->message("Will get source data from " . $this->table . '.');
-        }
-
-        $preResults->execute([
-            ':filterValue' => $filterValue
-        ]);
-
-        if ($this->timeDebug) {
-            $this->timeDebug->message("Data just fetched from " . $this->table . ".");
-        }
-
-        $rowQueryStringData = [];
-        while ($rowData = $preResults->fetch(PDO::FETCH_NUM)) {
-            $rowDataStrings = $this->convertDataResultToSuitableString($rowData);
-            $rowQueryStringData[] = "(" . implode(",", $rowDataStrings) . ")";
-        }
-
-        return implode(", ", $rowQueryStringData);
     }
 }

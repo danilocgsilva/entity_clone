@@ -9,6 +9,13 @@ use PDO;
 
 trait GetFields
 {
+    /**
+     * Get fields from a table. NOTE: The PDO must have declared table on
+     *   its connection string.
+     *
+     * @param PDO $pdo
+     * @return string[]
+     */
     private function getFields(PDO $pdo): array
     {
         $databaseName = $pdo->query('SELECT database()')->fetchColumn();
