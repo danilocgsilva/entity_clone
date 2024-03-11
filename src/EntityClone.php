@@ -56,6 +56,12 @@ class EntityClone
         return $this;
     }
 
+    /**
+     * Chnages the search to an altenative field other than the table id.
+     *
+     * @param string $filterField
+     * @return self
+     */
     public function setFilterField(string $filterField): self
     {
         $this->filterField = $filterField;
@@ -91,6 +97,9 @@ class EntityClone
         $this->queryBuilder->setIdValue($this->idValue);
         $this->queryBuilder->setTable($this->table);
         $this->queryBuilder->setSourcePdo($this->sourcePdo);
+        if ($this->filterField) {
+            $this->queryBuilder->setFilterField($this->filterField);
+        }
 
         $insertQuery = $this->queryBuilder->createInsertQuery();
     
@@ -146,15 +155,18 @@ class EntityClone
             $occurrencesFromOtherTables, 
             fn ($occurrence) => $occurrence > 0
         );
+
         $results = [
             'success' => [],
             'fails' => []
         ];
+
         foreach ($occurrencesNonZeroCounts as $table => $count) {
             $entityCloneTableLoop = new self($this->sourcePdo, $this->destinyPdo);
             $entityCloneTableLoop->setTable($table);
             $entityCloneTableLoop->setOnCloneId();
             $entityCloneTableLoop->setFilterField($this->sourceFields[0]);
+
             $results['success'][] = $table;
 
             try {

@@ -144,6 +144,18 @@ class QueryBuilder
         );
     }
 
+    /**
+     * Chnages the field criteria other than the table id for fetching data
+     *
+     * @param string $filterField
+     * @return self
+     */
+    public function setFilterField(string $filterField): self
+    {
+        $this->filterField = $filterField;
+        return $this;
+    }
+
     private function getSourceValuesAsString(string $filterValue): string
     {
         $fieldValueFilter = $this->filterField ?: $this->sourceFields[0];
