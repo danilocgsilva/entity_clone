@@ -30,6 +30,17 @@ class EntityCloneMultiples
 
     private QueryBuilder $queryBuilder;
 
+    /**
+     * Instructs class to considers values in table id.
+     *
+     * @return self
+     */
+    public function setOnCloneId(): self
+    {
+        $this->cloneId = true;
+        return $this;
+    }
+
     public function __construct(
         private PDO $sourcePdo,
         private PDO $destinyPdo
@@ -78,6 +89,9 @@ class EntityCloneMultiples
         $this->queryBuilder = new QueryBuilder();
         $this->queryBuilder->setDestinyFields($this->destinyFields);
         $this->queryBuilder->setSourceFields($this->sourceFields);
+        if ($this->cloneId) {
+            $this->queryBuilder->setOnCloneId();
+        }
         
         $commonFields = $this->queryBuilder->reduceFields();
         $this->commonFieldsCommaSeparated = implode(", ", $commonFields);
