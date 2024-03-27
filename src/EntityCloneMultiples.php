@@ -45,6 +45,10 @@ class EntityCloneMultiples
 
     public function entityCloneMultiples(array $ids)
     {
+        if (count($ids) === 0) {
+            throw new EntityCloneException("You may not use an empty array as ids strings.");
+        }
+        
         $this->ids = $ids;
         $this->sourceFields = $this->getFields($this->sourcePdo);
         $this->destinyFields = $this->getFields($this->destinyPdo);
