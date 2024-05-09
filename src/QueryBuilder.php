@@ -18,7 +18,7 @@ class QueryBuilder
 
     private ReductionFields $reductionFields;
 
-    private bool $cloneId = false;
+    private bool $cloneId;
 
     private string $commonFieldsCommaSeparated;
 
