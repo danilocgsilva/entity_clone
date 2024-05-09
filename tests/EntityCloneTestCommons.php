@@ -27,9 +27,15 @@ class EntityCloneTestCommons extends TestCase
      */
     protected function createPdo(?string $databaseName = null): PDO
     {
-        $baseStringPdoCreation = "mysql:host=%s;charset=utf8mb4;port=%s";
+        $baseStringPdoCreation = "mysql:host=%s;charset=utf8mb4";
+        $stringPdoCreating = "";
+        if (getenv("ENTITYCLONE_DB_PORT_TEST")) {
+            $baseStringPdoCreation .= ";port=%s";
+            $stringPdoCreating = sprintf($baseStringPdoCreation, getenv("ENTITYCLONE_DB_HOST_TEST"), getenv("ENTITYCLONE_DB_PORT_TEST"));
+        } else {
+            $stringPdoCreating = sprintf($baseStringPdoCreation, getenv("ENTITYCLONE_DB_HOST_TEST"));
+        }
         
-        $stringPdoCreating = sprintf($baseStringPdoCreation, getenv("ENTITYCLONE_DB_HOST_TEST"), getenv("ENTITYCLONE_DB_PORT_TEST"));
 
         if ($databaseName) {
             $stringPdoCreating .= ";dbname={$databaseName}";

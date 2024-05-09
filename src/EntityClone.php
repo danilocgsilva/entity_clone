@@ -50,9 +50,15 @@ class EntityClone
         return $this;
     }
 
-    public function setOnCloneId(): self
+    /**
+     * Instructs to application know if is required to clone the entity id.
+     *
+     * @param boolean $doCloneId
+     * @return self
+     */
+    public function setCloneId(bool $doCloneId): self
     {
-        $this->queryBuilder->setOnCloneId();
+        $this->queryBuilder->setCloneId($doCloneId);
         return $this;
     }
 

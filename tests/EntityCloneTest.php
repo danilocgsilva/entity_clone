@@ -24,6 +24,8 @@ class EntityCloneTest extends EntityCloneTestCommons
             $this->createPdo('destiny')
         );
 
+        $entityClone->setCloneId(false);
+
         $entityClone->setTable("drivers")
             ->entityClone("6");
 
@@ -58,6 +60,8 @@ class EntityCloneTest extends EntityCloneTestCommons
             $this->createPdo('source'),
             $this->createPdo('destiny')
         );
+
+        $entityClone->setCloneId(false);
 
         $entityClone->setTable("drivers")
             ->entityCloneDeepByFieldName("6");
@@ -98,6 +102,8 @@ class EntityCloneTest extends EntityCloneTestCommons
             $this->createPdo('destiny')
         );
 
+        $entityClone->setCloneId(false);
+
         $entityClone->setTable("drivers")
             ->entityCloneDeepByFieldName("6");
 
@@ -137,6 +143,8 @@ class EntityCloneTest extends EntityCloneTestCommons
             $this->createPdo('destiny')
         );
 
+        $entityClone->setCloneId(false);
+
         $entityClone->setTable("drivers")
             ->entityCloneDeepByFieldName("9");
 
@@ -175,6 +183,8 @@ class EntityCloneTest extends EntityCloneTestCommons
             $this->createPdo('source'),
             $this->createPdo('destiny')
         );
+
+        $entityClone->setCloneId(false);
 
         $entityClone->setTable("drivers")
             ->entityCloneDeepByFieldName("9");

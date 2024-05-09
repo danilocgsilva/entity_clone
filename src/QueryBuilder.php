@@ -42,9 +42,9 @@ class QueryBuilder
      *
      * @return self
      */
-    public function setOnCloneId(): self
+    public function setCloneId(bool $doCloneId): self
     {
-        $this->cloneId = true;
+        $this->cloneId = $doCloneId;
         return $this;
     }
 

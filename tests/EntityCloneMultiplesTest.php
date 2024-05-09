@@ -26,6 +26,8 @@ class EntityCloneMultiplesTest extends EntityCloneTestCommons
             $this->createPdo('destiny')
         );
 
+        $entityClone->setCloneId(false);
+
         $entityClone->setTable("drivers")
             ->entityCloneMultiples([3, 4, 7]);
 

@@ -29,15 +29,10 @@ class EntityCloneMultiples
     private TimeDebugInterface|null $timeDebug = null;
 
     private QueryBuilder $queryBuilder;
-
-    /**
-     * Instructs class to considers values in table id.
-     *
-     * @return self
-     */
-    public function setOnCloneId(): self
+    
+    public function setCloneId(bool $doCloneId): self
     {
-        $this->cloneId = true;
+        $this->cloneId = $doCloneId;
         return $this;
     }
 
@@ -89,9 +84,7 @@ class EntityCloneMultiples
         $this->queryBuilder = new QueryBuilder();
         $this->queryBuilder->setDestinyFields($this->destinyFields);
         $this->queryBuilder->setSourceFields($this->sourceFields);
-        if ($this->cloneId) {
-            $this->queryBuilder->setOnCloneId();
-        }
+        $this->queryBuilder->setCloneId($this->cloneId);
         
         $commonFields = $this->queryBuilder->reduceFields();
         $this->commonFieldsCommaSeparated = implode(", ", $commonFields);

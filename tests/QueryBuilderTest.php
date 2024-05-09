@@ -21,6 +21,7 @@ class QueryBuilderTest extends TestCase
     {
         $sourceFields = $this->getSampleSourceFields();
         $destinyFields = $this->getSampleDestinyFields();
+        $this->queryBuilder->setCloneId(false);
         $this->queryBuilder->setSourceFields($sourceFields);
         $this->queryBuilder->setDestinyFields($destinyFields);
 
@@ -46,7 +47,7 @@ class QueryBuilderTest extends TestCase
     {
         $sourceFields = $this->getSampleSourceFields();
         $destinyFields = $this->getSampleDestinyFields();
-        $this->queryBuilder->setOnCloneId();
+        $this->queryBuilder->setCloneId(true);
         $this->queryBuilder->setSourceFields($sourceFields);
         $this->queryBuilder->setDestinyFields($destinyFields);
 
