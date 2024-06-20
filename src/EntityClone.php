@@ -155,7 +155,7 @@ class EntityClone
 
         $entity->setPdo($this->sourcePdo);
         $occurrencesFromOtherTables = 
-            $entity->discoverEntitiesOccurrencesByIdentity($this->table, $idValue);
+            $entity->discoverEntitiesOccurrencesByIdentitySync($this->table, $idValue);
 
         $occurrencesNonZeroCounts = array_filter(
             $occurrencesFromOtherTables, 
