@@ -97,6 +97,26 @@ class EntityClone
         $this->idValue = $idValue;
         $this->sourceFields = $this->getFields($this->sourcePdo);
         $this->destinyFields = $this->getFields($this->destinyPdo);
+
+        if (count($this->sourceFields) === 0) {
+            if ($this->timeDebug) {
+                $this->timeDebug->message("Warning! Table " . $this->table . " does not exists in source.");
+            }
+            return [
+                'success' => false,
+                'reducedFields' => []
+            ];
+        }
+
+        if (count($this->destinyFields) === 0) {
+            if ($this->timeDebug) {
+                $this->timeDebug->message("Warning! Table " . $this->table . " does not exists in destiny.");
+            }
+            return [
+                'success' => false,
+                'reducedFields' => []
+            ];
+        }
         
         $this->queryBuilder->setSourceFields($this->sourceFields);
         $this->queryBuilder->setDestinyFields($this->destinyFields);
@@ -108,14 +128,25 @@ class EntityClone
         }
 
         $insertQuery = $this->queryBuilder->createInsertQuery();
-    
+
         $resResults = $this->destinyPdo->prepare($insertQuery);
 
         if ($this->timeDebug) {
             $this->timeDebug->message("Time before table insert in destiny. Table: " . $this->table);
         }
 
-        $resultsInsertion = $resResults->execute();
+        try {
+            $resultsInsertion = $resResults->execute();
+        } catch (Exception $e) {
+            $resultsInsertion = false;
+            if ($this->timeDebug) {
+                $this->timeDebug->message("Error of copying: " . $e->getMessage() . ", exception class: " . get_class($e));
+            }
+            return [
+                'success' => false,
+                'reducedFields' => $this->queryBuilder->getReductionFields()
+            ];
+        }
 
         if ($this->timeDebug) {
             $this->timeDebug->message("Insert finished. Table: " . $this->table);
