@@ -32,9 +32,17 @@ class QueryBuilder
 
     private ?string $filterField = null;
 
+    private bool $ignoreInsertErrors = false;
+
     public function __construct()
     {
         $this->reductionFields = new ReductionFields();
+    }
+
+    public function setIgnoreInsertErrors(bool $ignore): self
+    {
+        $this->ignoreInsertErrors = $ignore;
+        return $this;
     }
 
     /**
@@ -136,8 +144,14 @@ class QueryBuilder
         $this->commonFieldsCommaSeparated = implode(", ", $commonFields);
         $sourceValuesAsString = $this->getSourceValuesAsString($this->idValue);
 
+        $headerQuery = "INSERT";
+        if ($this->ignoreInsertErrors) {
+            $headerQuery .= " IGNORE";
+        }
+        $headerQuery .= " INTO %s (%s) VALUES %s;";
+
         return sprintf(
-            "INSERT INTO %s (%s) VALUES %s;", 
+            $headerQuery, 
             $this->table, 
             $this->commonFieldsCommaSeparated, 
             $sourceValuesAsString

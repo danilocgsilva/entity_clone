@@ -32,6 +32,8 @@ class EntityClone
     private TimeDebugInterface|null $timeDebug = null;
 
     private QueryBuilder $queryBuilder;
+
+    private bool $ignoreInsertError = false;
     
     /**
      * @param PDO $sourcePdo
@@ -42,6 +44,12 @@ class EntityClone
         private PDO $destinyPdo
     ) {
         $this->queryBuilder = new QueryBuilder();
+    }
+
+    public function setIgnoreInsertError(): self
+    {
+        $this->ignoreInsertError = true;
+        return $this;
     }
 
     public function setTimeDebug(TimeDebugInterface $timeDebug): self
@@ -118,6 +126,7 @@ class EntityClone
             ];
         }
         
+        $this->queryBuilder->setIgnoreInsertErrors($this->ignoreInsertError);
         $this->queryBuilder->setSourceFields($this->sourceFields);
         $this->queryBuilder->setDestinyFields($this->destinyFields);
         $this->queryBuilder->setIdValue($this->idValue);
