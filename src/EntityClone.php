@@ -15,7 +15,7 @@ class EntityClone
 {
     use GetFields;
 
-    private string $table;
+    private string|null $table = null;
 
     private string $idValue;
 
@@ -23,13 +23,14 @@ class EntityClone
 
     private array $destinyFields;
 
-    private bool $cloneId = false;
+    private bool $cloneIdSetted = false;
 
     private string $commonFieldsCommaSeparated;
 
     private ?string $filterField = null;
 
-    private TimeDebugInterface|null $timeDebug = null;
+    // private TimeDebugInterface|ErrorLogInterface|null $timeDebug = null;
+    private $timeDebug = null;
 
     private QueryBuilder $queryBuilder;
 
@@ -52,7 +53,7 @@ class EntityClone
         return $this;
     }
 
-    public function setTimeDebug(TimeDebugInterface $timeDebug): self
+    public function setTimeDebug($timeDebug): self
     {
         $this->timeDebug = $timeDebug;
         return $this;
@@ -67,6 +68,7 @@ class EntityClone
     public function setCloneId(bool $doCloneId): self
     {
         $this->queryBuilder->setCloneId($doCloneId);
+        $this->cloneIdSetted = true;
         return $this;
     }
 
@@ -82,11 +84,11 @@ class EntityClone
         return $this;
     }
 
-    public function setOffCloneId(): self
-    {
-        $this->cloneId = false;
-        return $this;
-    }
+    // public function setOffCloneId(): self
+    // {
+    //     $this->cloneId = false;
+    //     return $this;
+    // }
 
     public function setTable(string $table): self
     {
@@ -180,6 +182,13 @@ class EntityClone
      */
     public function entityCloneDeepByFieldName(string $idValue): array
     {
+        if ($this->table === null) {
+            throw new Exception("You have not setted the table to clone. Use setTable method.");
+        }
+        if (!$this->cloneIdSetted) {
+            throw new Exception("It is required to tell to the object if the id clone will be done. Use setCloneId(true|false) method before making the clone.");
+        }
+
         $this->entityClone($idValue);
 
         /** @var \Danilocgsilva\EntitiesDiscover\Entity $entity */
