@@ -9,6 +9,7 @@ use Danilocgsilva\EntitiesDiscover\Entity;
 use Danilocgsilva\EntitiesDiscover\ErrorLogInterface;
 use Danilocgsilva\EntityClone\Traits\GetFields;
 use Danilocgsilva\EntityClone\QueryBuilder;
+use Danilocgsilva\EntitiesDiscover\TimeDebugInterface as EDTimeDebugInterface;
 use Exception;
 
 class EntityClone
@@ -29,12 +30,13 @@ class EntityClone
 
     private ?string $filterField = null;
 
-    // private TimeDebugInterface|ErrorLogInterface|null $timeDebug = null;
-    private $timeDebug = null;
+    private TimeDebugInterface|EDTimeDebugInterface|null $timeDebug = null;
 
     private QueryBuilder $queryBuilder;
 
     private bool $ignoreInsertError = false;
+
+    private array $skipTablesNames = [];
     
     /**
      * @param PDO $sourcePdo
@@ -47,13 +49,19 @@ class EntityClone
         $this->queryBuilder = new QueryBuilder();
     }
 
+    public function setSkipTables(array $skipTableNames): self
+    {
+        $this->skipTablesNames = $skipTableNames;
+        return $this;
+    }
+
     public function setIgnoreInsertError(): self
     {
         $this->ignoreInsertError = true;
         return $this;
     }
 
-    public function setTimeDebug($timeDebug): self
+    public function setTimeDebug(TimeDebugInterface|EDTimeDebugInterface $timeDebug): self
     {
         $this->timeDebug = $timeDebug;
         return $this;
@@ -197,6 +205,8 @@ class EntityClone
                 function message($message) {} 
             }
         );
+
+        $entity->setSkipTables($this->skipTablesNames);
 
         if ($this->timeDebug) {
             $entity->setTimeDebug($this->timeDebug);
