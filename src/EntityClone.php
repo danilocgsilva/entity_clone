@@ -24,7 +24,9 @@ class EntityClone
 
     private array $destinyFields;
 
-    private bool $cloneIdSetted = false;
+    // private bool $cloneIdSetted = false;
+
+    private bool|null $cloneId = null;
 
     private string $commonFieldsCommaSeparated;
 
@@ -76,7 +78,7 @@ class EntityClone
     public function setCloneId(bool $doCloneId): self
     {
         $this->queryBuilder->setCloneId($doCloneId);
-        $this->cloneIdSetted = true;
+        $this->cloneId = $doCloneId;
         return $this;
     }
 
@@ -193,7 +195,7 @@ class EntityClone
         if ($this->table === null) {
             throw new Exception("You have not setted the table to clone. Use setTable method.");
         }
-        if (!$this->cloneIdSetted) {
+        if (!$this->cloneId) {
             throw new Exception("It is required to tell to the object if the id clone will be done. Use setCloneId(true|false) method before making the clone.");
         }
 
@@ -217,7 +219,7 @@ class EntityClone
             $entity->discoverEntitiesOccurrencesByIdentitySync($this->table, $idValue);
 
         $occurrencesNonZeroCounts = array_filter(
-            $occurrencesFromOtherTables, 
+            $occurrencesFromOtherTables->getSuccesses(), 
             fn ($occurrence) => $occurrence > 0
         );
 
@@ -229,7 +231,7 @@ class EntityClone
         foreach ($occurrencesNonZeroCounts as $table => $count) {
             $entityCloneTableLoop = new self($this->sourcePdo, $this->destinyPdo);
             $entityCloneTableLoop->setTable($table);
-            $entityCloneTableLoop->setOnCloneId();
+            $entityCloneTableLoop->setCloneId($this->cloneId);
             $entityCloneTableLoop->setFilterField($this->sourceFields[0]);
 
             $results['success'][] = $table;
