@@ -249,7 +249,8 @@ class EntityClone
     public function getCloningIdAndTablePairs(string $idValue): array
     {
         $pairs = [new TableIdPair($this->table, $idValue)];
-        while (true) {
+        $shouldGoDeep = true;
+        while ($shouldGoDeep) {
             /** @var \Danilocgsilva\EntitiesDiscover\Entity $entity */
             $entity = new Entity(
                 new class() implements ErrorLogInterface { 
