@@ -192,12 +192,7 @@ class EntityClone
      */
     public function entityCloneDeepByFieldName(string $idValue): array
     {
-        if ($this->table === null) {
-            throw new Exception("You have not setted the table to clone. Use setTable method.");
-        }
-        if (!$this->cloneId) {
-            throw new Exception("It is required to tell to the object if the id clone will be done. Use setCloneId(true|false) method before making the clone.");
-        }
+        $this->validateOrException();
 
         $this->entityClone($idValue);
 
@@ -245,6 +240,41 @@ class EntityClone
         return $results;
     }
 
+    /**
+     * Summary of getCloningIdAndTablePairs
+     * 
+     * @param string $idValue
+     * @return array
+     */
+    public function getCloningIdAndTablePairs(string $idValue): array
+    {
+        $pairs = [new TableIdPair($this->table, $idValue)];
+        while (true) {
+            /** @var \Danilocgsilva\EntitiesDiscover\Entity $entity */
+            $entity = new Entity(
+                new class() implements ErrorLogInterface { 
+                    function message($message) {} 
+                }
+            );
+            $entity->setSkipTables($this->skipTablesNames);
+
+            if ($this->timeDebug) {
+                $entity->setTimeDebug($this->timeDebug);
+            }
+    
+            $entity->setPdo($this->sourcePdo);
+            $occurrencesFromOtherTables = 
+                $entity->discoverEntitiesOccurrencesByIdentitySync($this->table, $idValue);
+    
+            $occurrencesNonZeroCounts = array_filter(
+                $occurrencesFromOtherTables->getSuccesses(), 
+                fn ($occurrence) => $occurrence > 0
+            );
+        }
+
+        return $pairs;
+    }
+
     private function getFirstFieldFromTable(string $table): string
     {
         $query = sprintf("DESCRIBE %s;", $table);
@@ -252,5 +282,15 @@ class EntityClone
         $preResult->execute();
         $firstFieldRow = $preResult->fetch(PDO::FETCH_ASSOC);
         return $firstFieldRow["Field"];
+    }
+
+    private function validateOrException()
+    {
+        if ($this->table === null) {
+            throw new Exception("You have not setted the table to clone. Use setTable method.");
+        }
+        if (!$this->cloneId) {
+            throw new Exception("It is required to tell to the object if the id clone will be done. Use setCloneId(true|false) method before making the clone.");
+        }
     }
 }

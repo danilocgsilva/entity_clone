@@ -170,6 +170,18 @@ class QueryBuilder
         return $this;
     }
 
+    public function getIds(string $filterValue)
+    {
+        $fieldValueFilter = $this->sourceFields[0];
+
+        $getSourceDataQuery = sprintf(
+            "SELECT %s FROM %s WHERE %s = :filterValue",
+            $fieldValueFilter,
+            $this->table,
+            $fieldValueFilter
+        );
+    }
+
     private function getSourceValuesAsString(string $filterValue): string
     {
         $fieldValueFilter = $this->filterField ?: $this->sourceFields[0];
