@@ -7,6 +7,7 @@ namespace Danilocgsilva\EntityClone;
 use Danilocgsilva\EntityClone\ReductionFields;
 use Danilocgsilva\EntityClone\Traits\GetFields;
 use PDO;
+use Exception;
 
 class QueryBuilder
 {
@@ -180,6 +181,61 @@ class QueryBuilder
             $this->table,
             $fieldValueFilter
         );
+    }
+
+    /**
+     * Returns the table ids based on value from other table field
+     * 
+     * @param string $table
+     * @param string $idValue
+     * @param string $fieldName
+     * @return array
+     */
+    public function getCopyingIds(string $table, string $idValue, string $fieldName): array
+    {
+        $tableIdFieldName = $this->getFieldsFromTable($table)[0];
+        var_dump($table, $idValue, $fieldName);
+        $queryBase = sprintf("SELECT %s FROM %s WHERE %s = :idValue", $tableIdFieldName, $table, $fieldName);
+        $preResults = $this->sourcePdo->prepare($queryBase);
+        $preResults->execute([":idValue" => $idValue]);
+        $preResults->setFetchMode(PDO::FETCH_NUM);
+        $ids = [];
+        while ($row = $preResults->fetch()) {
+            $ids[] = $row[0];
+        }
+        return $ids;
+    }
+
+    /**
+     * Get fields from a table. NOTE: The PDO must have declared table on
+     *   its connection string.
+     *
+     * @param string $tableName
+     * @return string[]
+     */
+    private function getFieldsFromTable(string $tableName): array
+    {
+        $databaseName = $this->sourcePdo->query('SELECT database()')->fetchColumn();
+
+        if ($databaseName === null) {
+            throw new Exception("The PDO object must have a database definition on its statement.");
+        }
+
+        $baseQuery = "SELECT COLUMN_NAME
+            FROM INFORMATION_SCHEMA.COLUMNS
+            WHERE TABLE_SCHEMA = :tableschema AND TABLE_NAME = :tablename
+            ORDER BY ordinal_position;";
+
+        $preResults = $this->sourcePdo->prepare($baseQuery);
+        $preResults->execute([
+            ':tableschema' => $databaseName,
+            ':tablename' => $tableName,
+        ]);
+        $fields = [];
+        while ($row = $preResults->fetch(PDO::FETCH_ASSOC)) {
+            $fields[] = $row['COLUMN_NAME'];
+        }
+        return $fields;
     }
 
     private function getSourceValuesAsString(string $filterValue): string

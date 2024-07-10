@@ -10,6 +10,7 @@ use Danilocgsilva\EntitiesDiscover\ErrorLogInterface;
 use Danilocgsilva\EntityClone\Traits\GetFields;
 use Danilocgsilva\EntityClone\QueryBuilder;
 use Danilocgsilva\EntitiesDiscover\TimeDebugInterface as EDTimeDebugInterface;
+use Danilocgsilva\EntitiesDiscover\CountResults;
 use Exception;
 
 class EntityClone
@@ -248,7 +249,14 @@ class EntityClone
      */
     public function getCloningIdAndTablePairs(string $idValue): array
     {
-        $pairs = [new TableIdPair($this->table, $idValue)];
+        $this->sourceFields = $this->getFields($this->sourcePdo);
+        // $pairs = [new TableIdPair($this->table, $idValue)];
+        // $tableIds = new TableIds($this->table);
+        // $tableIds->addIds([$idValue]);
+
+        $tableGroupWithIds = new TableGroupWithIds();
+        $tableGroupWithIds->addFields($this->table, [$idValue]);
+
         $shouldGoDeep = true;
         while ($shouldGoDeep) {
             /** @var \Danilocgsilva\EntitiesDiscover\Entity $entity */
@@ -264,6 +272,8 @@ class EntityClone
             }
     
             $entity->setPdo($this->sourcePdo);
+
+            /** @var CountResults */
             $occurrencesFromOtherTables = 
                 $entity->discoverEntitiesOccurrencesByIdentitySync($this->table, $idValue);
     
@@ -271,6 +281,12 @@ class EntityClone
                 $occurrencesFromOtherTables->getSuccesses(), 
                 fn ($occurrence) => $occurrence > 0
             );
+
+            foreach ($occurrencesNonZeroCounts as $table => $occurrencesCount) {
+                $this->queryBuilder->getCopyingIds($table, $idValue, $this->sourceFields[0]);
+            }
+
+            die("2\n");
         }
 
         return $pairs;
